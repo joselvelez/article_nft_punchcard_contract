@@ -24,9 +24,19 @@ async function Main() {
     txn = await contract.getRedemptionCost();
     console.log(parseInt(txn));
 
+    // check if address has a punchcard
+    console.log("Checking to see if address has a punchcard, should be false");
+    txn = await contract.getPunchcard();
+    console.log(txn);
+
     // Mint a punch card
     console.log("Attempting to purchase a punchcard");
     txn = await contract.purchasePunchcard(8, { value: ethers.utils.parseEther("0.00000012") });
+
+    // check if address has a punchcard
+    console.log("Checking to see if address has a punchcard, should be true");
+    txn = await contract.getPunchcard();
+    console.log(txn);
 
     // get balance
     console.log("Get current balance");
@@ -52,6 +62,11 @@ async function Main() {
     console.log("Check if can access article 1");
     txn = await contract.accessToArticle(1);
     console.log(txn);
+
+    // check if address balance is decremented by 1
+    console.log("New balance after buying access to article 1");
+    txn = await contract.getBalance(1);
+    console.log("New balance is %s", parseInt(txn));
 }
 
 async function runMain() {

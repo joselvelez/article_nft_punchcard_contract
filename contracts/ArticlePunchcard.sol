@@ -47,8 +47,10 @@ contract ArticlePunchcard is ERC721, Ownable {
     }
 
     function mintPunchcard(uint _qty) internal {
+        require(ownerToAsset[msg.sender] == 0, "You already have a punchcard!");
         console.log("getting new token id");
         uint newTokenId = _tokenIds.current();
+        console.log("minting with newTokenId of %s", newTokenId);
         _safeMint(msg.sender, newTokenId);
         assetToOwner[newTokenId] = msg.sender;
         ownerToAsset[msg.sender] = newTokenId;
@@ -58,12 +60,28 @@ contract ArticlePunchcard is ERC721, Ownable {
     }
 
     function purchasePunchcard(uint _qty) external payable canBuy(_qty) {
-        // TO DO: require wallet does not alrealdy own a token
+        require(ownerToAsset[msg.sender] == 0, "This wallet already has a punchcard");
         mintPunchcard(_qty);
     }
 
     function getBalance(uint _tokenId) public view returns (uint) {
         return punchcardBalances[_tokenId].redemptionCount;
+    }
+
+    function getTokenId(address _address) public view returns (uint) {
+        return ownerToAsset[_address];
+    }
+
+    function getCurrentPrice() external view returns (uint) {
+        return redemptionCost;
+    }
+
+    function hasPunchcard(address _address) public view returns (bool) {
+        if (ownerToAsset[_address] == 0) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     function addRedemptions(uint _qty, uint _tokenId) external payable canBuy(_qty) {
@@ -81,6 +99,8 @@ contract ArticlePunchcard is ERC721, Ownable {
         uint _currentBalance = punchcardBalances[_tokenId].redemptionCount;
         require(_currentBalance > 0, "You do not have any more redemptions left");
         ownerToArticles[msg.sender][_articleId] = true;
+        uint _newBalance = _currentBalance.sub(1);
+        punchcardBalances[_tokenId].redemptionCount = _newBalance;
     }
 
     function accessToArticle(uint _articleId) external view returns (bool) {
@@ -90,6 +110,12 @@ contract ArticlePunchcard is ERC721, Ownable {
             return false;
         }
     }
+
+    // TO DO
+    // Add burn function
+
+    // TO DO
+    // contract owner withdrawal function
 
     // TO DO
     // transfer function that only allowed to wallets that do not already have a token
