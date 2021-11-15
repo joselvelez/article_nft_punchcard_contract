@@ -103,8 +103,8 @@ contract ArticlePunchcard is ERC721, Ownable {
         punchcardBalances[_tokenId].redemptionCount = _newBalance;
     }
 
-    function accessToArticle(uint _articleId) external view returns (bool) {
-        if (ownerToArticles[msg.sender][_articleId]) {
+    function accessToArticle(address _address, uint _articleId) external view returns (bool) {
+        if (ownerToArticles[_address][_articleId]) {
             return true;
         } else {
             return false;
