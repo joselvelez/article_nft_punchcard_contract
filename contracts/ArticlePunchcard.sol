@@ -3,7 +3,6 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -14,6 +13,11 @@ contract ArticlePunchcard is ERC721, Ownable {
     Counters.Counter private _tokenIds;
 
     using SafeMath for uint;
+
+    // Events
+    event PunchcardMinted(address minter, uint tokenId);
+    event PunchcardRefilled(address minter, uint quantity, uint tokenId);
+    event PunchcardUsed(address minter, uint articleId);
     
     uint redemptionCost = .0008 ether;
 
@@ -57,6 +61,7 @@ contract ArticlePunchcard is ERC721, Ownable {
         punchcardBalances[newTokenId] = Punchcard({redemptionCount: _qty});
         _tokenIds.increment();
         console.log("Minting a punchcard for %s with %s redemptions", msg.sender, _qty);
+        emit PunchcardMinted(msg.sender, newTokenId);
     }
 
     function purchasePunchcard(uint _qty) external payable canBuy(_qty) {
@@ -91,6 +96,7 @@ contract ArticlePunchcard is ERC721, Ownable {
         console.log("Current balance is %s", _currentBalance);
         punchcardBalances[_ownerToken].redemptionCount = _currentBalance.add(_qty);
         console.log("New balance is %s", punchcardBalances[_ownerToken].redemptionCount);
+        emit PunchcardRefilled(msg.sender, _qty, _tokenId);
     }
 
     function assignAccessToArticle(uint _articleId) external {
@@ -101,6 +107,7 @@ contract ArticlePunchcard is ERC721, Ownable {
         ownerToArticles[msg.sender][_articleId] = true;
         uint _newBalance = _currentBalance.sub(1);
         punchcardBalances[_tokenId].redemptionCount = _newBalance;
+        emit PunchcardUsed(msg.sender, _articleId);
     }
 
     function accessToArticle(address _address, uint _articleId) external view returns (bool) {
@@ -110,13 +117,4 @@ contract ArticlePunchcard is ERC721, Ownable {
             return false;
         }
     }
-
-    // TO DO
-    // Add burn function
-
-    // TO DO
-    // contract owner withdrawal function
-
-    // TO DO
-    // transfer function that only allowed to wallets that do not already have a token
 }
